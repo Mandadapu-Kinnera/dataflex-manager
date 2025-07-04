@@ -16,7 +16,7 @@ import {
   Button,
   Box,
 } from '@mui/material';
-import { Edit, Delete, Save, Cancel } from '@mui/icons-material';
+import { Edit, Delete, Save, Cancel, Add } from '@mui/icons-material';
 import { useAppSelector } from '../hooks/useAppSelector';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import {
@@ -25,6 +25,7 @@ import {
   setRowsPerPage,
   updateRow,
   deleteRow,
+  addRow,
   setEditingRow,
   clearEditingRows,
   TableRow as TableRowType,
@@ -169,6 +170,29 @@ const DataTable: React.FC = () => {
     }
   };
 
+  const handleAddRow = () => {
+    const visibleColumns = columns.filter(col => col.visible);
+    const newRow: TableRowType = {
+      id: `new_${Date.now()}`,
+      name: '',
+      email: '',
+      age: 0,
+      role: '',
+    };
+    
+    // Initialize all visible columns with empty values
+    visibleColumns.forEach(col => {
+      if (col.type === 'number') {
+        newRow[col.id] = 0;
+      } else {
+        newRow[col.id] = '';
+      }
+    });
+
+    dispatch(addRow(newRow));
+    dispatch(setEditingRow({ id: newRow.id, editing: true }));
+  };
+
   const handleSaveAll = () => {
     dispatch(clearEditingRows());
   };
@@ -181,16 +205,26 @@ const DataTable: React.FC = () => {
 
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-      {editingRows.size > 0 && (
-        <Box sx={{ p: 2, display: 'flex', gap: 2 }}>
-          <Button variant="contained" onClick={handleSaveAll}>
-            Save All
-          </Button>
-          <Button variant="outlined" onClick={handleCancelAll}>
-            Cancel All
-          </Button>
-        </Box>
-      )}
+      <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={handleAddRow}
+        >
+          Add New Row
+        </Button>
+        
+        {editingRows.length > 0 && (
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button variant="contained" onClick={handleSaveAll}>
+              Save All ({editingRows.length})
+            </Button>
+            <Button variant="outlined" onClick={handleCancelAll}>
+              Cancel All
+            </Button>
+          </Box>
+        )}
+      </Box>
       
       <TableContainer sx={{ maxHeight: 600 }}>
         <Table stickyHeader>
@@ -220,7 +254,7 @@ const DataTable: React.FC = () => {
                 key={row.id}
                 row={row}
                 columns={columns}
-                isEditing={editingRows.has(row.id)}
+                isEditing={editingRows.includes(row.id)}
                 onEdit={handleEdit}
                 onSave={handleSave}
                 onCancel={handleCancel}

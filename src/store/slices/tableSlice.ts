@@ -32,7 +32,7 @@ interface TableState {
   searchTerm: string;
   currentPage: number;
   rowsPerPage: number;
-  editingRows: Set<string>;
+  editingRows: string[];
 }
 
 const defaultColumns: Column[] = [
@@ -57,7 +57,7 @@ const initialState: TableState = {
   searchTerm: '',
   currentPage: 0,
   rowsPerPage: 10,
-  editingRows: new Set(),
+  editingRows: [],
 };
 
 const tableSlice = createSlice({
@@ -104,13 +104,15 @@ const tableSlice = createSlice({
     },
     setEditingRow: (state, action: PayloadAction<{ id: string; editing: boolean }>) => {
       if (action.payload.editing) {
-        state.editingRows.add(action.payload.id);
+        if (!state.editingRows.includes(action.payload.id)) {
+          state.editingRows.push(action.payload.id);
+        }
       } else {
-        state.editingRows.delete(action.payload.id);
+        state.editingRows = state.editingRows.filter(id => id !== action.payload.id);
       }
     },
     clearEditingRows: (state) => {
-      state.editingRows.clear();
+      state.editingRows = [];
     },
   },
 });
